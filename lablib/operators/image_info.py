@@ -3,6 +3,11 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from lablib.utils import get_logger
+
+
+log = get_logger(__name__)
+
 
 @dataclass
 class ImageInfo:
@@ -20,11 +25,15 @@ class ImageInfo:
     timecode: str = "01:00:00:01"
 
     def __run_command(self, cmd: list[str]) -> list[str]:
-        result = (
-            subprocess.run(cmd, capture_output=True, text=True)
-            .stdout.strip()
-            .splitlines()
-        )
+        log.debug(f"Running command with : {cmd}")
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        out, err = proc.communicate(timeout=2)
+        if err:
+            log.error(f"Error running command: {err}")
+        # subprocess.run(cmd, capture_output=True, text=True)
+        # result = out.strip().splitlines()
+        result = [line.decode("utf-8").strip() for line in out.splitlines()]
+
         return result
 
     def update_from_ffprobe(self) -> None:
@@ -41,9 +50,8 @@ class ImageInfo:
             "default=noprint_wrappers=1",
             abspath,
         ]
-        print(f"running ffprobe with: {cmd}")
         for line in self.__run_command(cmd):
-            # print(f"{line = }")
+            log.debug(f"{line = }")
             vars = line.split("=")
             if "width" in vars[0]:
                 self.display_width = int(vars[1].strip())
@@ -66,9 +74,8 @@ class ImageInfo:
     def update_from_iinfo(self) -> None:
         abspath = str(self.file_path.resolve())
         cmd = ["iinfo", "-v", abspath]
-        print(f"running iinfo with: {cmd}")
         for line in self.__run_command(cmd):
-            # print(f"{line = }")
+            log.debug(f"{line = }")
             if abspath in line and line.find(abspath) < 2:
                 vars = line.split(": ")[1].split(",")
                 size = vars[0].strip().split("x")
@@ -107,8 +114,7 @@ class ImageInfo:
 
         result = ImageInfo(file_path=path)
         result.update_from_iinfo()
-        print(f"{result = }")
         result.update_from_ffprobe()
-        print(f"{result = }")
+        log.info(f"{result = }")
 
         return result

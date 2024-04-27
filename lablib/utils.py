@@ -3,7 +3,14 @@ from __future__ import annotations
 import os
 import math
 import uuid
+import logging
 from pathlib import Path
+
+
+def get_logger(name: str) -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    return logger
 
 
 class format_dict(dict):
