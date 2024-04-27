@@ -9,3 +9,6 @@ from lablib.operators import ImageInfo
 def test_ImageInfo(path: str):
     image_info = ImageInfo.from_path(path)
     assert image_info.width == 4382
+    assert image_info.height == 2310
+    assert image_info.timecode == "02:10:04:17"
+    assert image_info.fps == 25.0

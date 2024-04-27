@@ -1,16 +1,9 @@
 from __future__ import annotations
 
-from copy import deepcopy
-from pathlib import Path
-
-import subprocess
 import os
 import math
 import uuid
-
-import opentimelineio as otio
-
-# from lablib.operators import ImageInfo
+from pathlib import Path
 
 
 class format_dict(dict):
