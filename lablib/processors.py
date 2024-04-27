@@ -18,10 +18,7 @@ from selenium.webdriver.common.by import By
 
 import PyOpenColorIO as OCIO
 
-from . import (
-    utils,
-    operators as ops
-)
+from . import utils, operators as ops
 
 
 @dataclass
@@ -31,7 +28,7 @@ class EffectsFileProcessor:
     @property
     def color_operators(self) -> dict:
         return self._color_ops
-    
+
     @color_operators.setter
     def color_operators(self, color_ops: list) -> None:
         self._color_ops = color_ops
@@ -39,11 +36,11 @@ class EffectsFileProcessor:
     @color_operators.deleter
     def color_operators(self) -> None:
         self._color_ops = []
-    
+
     @property
     def repo_operators(self) -> dict:
         return self._repo_ops
-    
+
     @repo_operators.setter
     def repo_operators(self, repo_ops: list) -> None:
         self._repo_ops = repo_ops
@@ -60,28 +57,32 @@ class EffectsFileProcessor:
         self._class_search_key: str = "class"
         self._index_search_key: str = "subTrackIndex"
         self._data_search_key: str = "node"
-        self._valid_attrs: tuple = tuple((
-            "in_colorspace",
-            "out_colorspace",
-            "file",
-            "saturation",
-            "display",
-            "view",
-            "translate",
-            "rotate",
-            "scale",
-            "center",
-            "power",
-            "offset",
-            "slope",
-            "direction"
-        ))
-        self._valid_attrs_mapping: dict = dict({
-            "in_colorspace": "src",
-            "out_colorspace": "dst",
-            "file": "src",
-            "saturation": "sat"
-        })
+        self._valid_attrs: tuple = tuple(
+            (
+                "in_colorspace",
+                "out_colorspace",
+                "file",
+                "saturation",
+                "display",
+                "view",
+                "translate",
+                "rotate",
+                "scale",
+                "center",
+                "power",
+                "offset",
+                "slope",
+                "direction",
+            )
+        )
+        self._valid_attrs_mapping: dict = dict(
+            {
+                "in_colorspace": "src",
+                "out_colorspace": "dst",
+                "file": "src",
+                "saturation": "sat",
+            }
+        )
         if self.src:
             self.load(self.src)
 
@@ -112,7 +113,7 @@ class EffectsFileProcessor:
                         v = [v, v]
                     result[k] = v
         op = self._get_operator_class(data[self._class_search_key])
-        return self._get_operator_sanitized(op = op, data = result)
+        return self._get_operator_sanitized(op=op, data=result)
 
     def _load(self) -> None:
         with open(self.src, "r") as f:
@@ -122,7 +123,9 @@ class EffectsFileProcessor:
         for k, v in _ops.items():
             if isinstance(v, dict):
                 class_name = "{}Transform".format(
-                    v[self._class_search_key].replace("OCIO", "").replace("Transform", "")
+                    v[self._class_search_key]
+                    .replace("OCIO", "")
+                    .replace("Transform", "")
                 )
                 if class_name in self._wrapper_class_names:
                     ocio_nodes.append(v)
@@ -149,42 +152,46 @@ class EffectsFileProcessor:
 
 @dataclass
 class ColorProcessor:
-    operators: list = field(default_factory = lambda: list([]))
+    operators: list = field(default_factory=lambda: list([]))
     config_path: str = None
     staging_dir: str = None
     context: str = "LabLib"
     family: str = "LabLib"
     working_space: str = "ACES - ACEScg"
-    views: list[str] = field(default_factory = lambda: list([]))
+    views: list[str] = field(default_factory=lambda: list([]))
 
     def __post_init__(self) -> None:
         if not self.config_path:
             self.config_path = Path(os.environ.get("OCIO")).as_posix()
         if not self.staging_dir:
-            self.staging_dir = Path(os.environ.get("TEMP", os.environ["TMP"]),
-                "LabLib",
-                str(uuid.uuid4())
-                ).resolve().as_posix()
+            self.staging_dir = (
+                Path(
+                    os.environ.get("TEMP", os.environ["TMP"]),
+                    "LabLib",
+                    str(uuid.uuid4()),
+                )
+                .resolve()
+                .as_posix()
+            )
         self._description: str = None
         self._vars: dict = dict({})
         self._views: list[str] = None
         if self.views:
-            self._views: list[str] = self.set_views(self.views)            
+            self._views: list[str] = self.set_views(self.views)
         self._ocio_config: OCIO.Config = None
         self._ocio_transforms: list = list([])
         self._ocio_search_paths: list = list([])
         self._ocio_config_name: str = "config.ocio"
         self._dest_path: str = None
-        
 
     # @property
     # def operators(self) -> None:
     #     return self.operators
-    # 
+    #
     # @operators.setter
     # def operators(self, *args) -> None:
     #     self.set_operators(*args)
-    # 
+    #
     # @operators.deleter
     # def operators(self) -> None:
     #     self.clear_operators()
@@ -192,11 +199,11 @@ class ColorProcessor:
     # @property
     # def views(self) -> list:
     #     return self._views
-    # 
+    #
     # @views.setter
     # def views(self, *args: str | list[str]) -> None:
     #     self.set_views(*args)
-    # 
+    #
     # @views.deleter
     # def views(self) -> None:
     #     self.clear_views()
@@ -204,11 +211,11 @@ class ColorProcessor:
     # @property
     # def vars(self) -> list:
     #     return self._vars
-    # 
+    #
     # @vars.setter
     # def vars(self, var_dict: dict) -> None:
     #     self.set_vars(**var_dict)
-    # 
+    #
     # @vars.deleter
     # def vars(self) -> None:
     #     self.clear_vars()
@@ -218,7 +225,7 @@ class ColorProcessor:
 
     def set_staging_dir(self, path: str) -> None:
         self.staging_dir = Path(path).resolve().as_posix()
-    
+
     def set_views(self, *args: str | list[str]) -> None:
         self.clear_views()
         self.append_views(*args)
@@ -230,7 +237,7 @@ class ColorProcessor:
     def set_vars(self, **kwargs) -> None:
         self.clear_vars()
         self.append_vars(**kwargs)
-    
+
     def set_description(self, desc: str) -> None:
         self._description = desc
 
@@ -260,16 +267,16 @@ class ColorProcessor:
     def append_vars(self, **kwargs) -> None:
         for k, v in kwargs.items():
             self._vars[k] = v
-    
+
     def get_config_path(self) -> str:
         return self._dest_path
 
     def get_description_from_config(self) -> str:
         return self._ocio_config.getDescription()
-    
+
     def _get_search_paths_from_config(self) -> list:
         return list(self._ocio_config.getSearchPaths())
-    
+
     def _sanitize_search_paths(self, paths: list) -> list:
         real_paths = []
         for p in paths:
@@ -285,7 +292,7 @@ class ColorProcessor:
         real_paths = list(set(real_paths))
         self._search_paths = real_paths
         return real_paths
-    
+
     def _get_absolute_search_paths_from_ocio(self) -> list:
         paths = self._get_search_paths_from_config()
         for op in self._ocio_transforms:
@@ -294,7 +301,7 @@ class ColorProcessor:
             except:
                 continue
         return self._sanitize_search_paths(paths)
-    
+
     def _get_absolute_search_paths(self) -> list:
         paths = self._get_search_paths_from_config()
         for op in self.operators:
@@ -327,20 +334,16 @@ class ColorProcessor:
         self._ocio_config.setDescription(self._description)
         group_transform = OCIO.GroupTransform(self._ocio_transforms)
         look_transform = OCIO.ColorSpaceTransform(
-            src = self.working_space,
-            dst = self.context
+            src=self.working_space, dst=self.context
         )
         cspace = OCIO.ColorSpace()
         cspace.setName(self.context)
         cspace.setFamily(self.family)
         cspace.setTransform(
-            group_transform,
-            OCIO.ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
+            group_transform, OCIO.ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
         )
         look = OCIO.Look(
-            name = self.context,
-            processSpace = self.working_space,
-            transform = look_transform
+            name=self.context, processSpace=self.working_space, transform=look_transform
         )
         self._ocio_config.addColorSpace(cspace)
         self._ocio_config.addLook(look)
@@ -348,14 +351,16 @@ class ColorProcessor:
             self._ocio_config.getActiveDisplays().split(",")[0],
             self.context,
             self.working_space,
-            looks = self.context
+            looks=self.context,
         )
         if not self._views:
             self._ocio_config.setActiveViews(
-                "{},{}".format(self.context, self._ocio_config.getActiveViews()))
+                "{},{}".format(self.context, self._ocio_config.getActiveViews())
+            )
         else:
             self._ocio_config.setActiveViews(
-                "{},{}".format(self.context, ",".join(self._views)))
+                "{},{}".format(self.context, ",".join(self._views))
+            )
         self._ocio_config.validate()
 
     def write_config(self, dest: str = None) -> str:
@@ -367,8 +372,8 @@ class ColorProcessor:
             if l.find("search_path") >= 0:
                 config_lines[i] = "\nsearch_path:"
                 for idx, sp in enumerate(search_paths):
-                    config_lines.insert(i+idx+1, sp)
-                config_lines.insert(i+len(search_paths)+1, "")
+                    config_lines.insert(i + idx + 1, sp)
+                config_lines.insert(i + len(search_paths) + 1, "")
                 break
         final_config = "\n".join(config_lines)
         dest = Path(dest).resolve()
@@ -378,7 +383,8 @@ class ColorProcessor:
         return final_config
 
     def create_config(self, dest: str = None) -> None:
-        if not dest: dest = Path(self.staging_dir, self._ocio_config_name)
+        if not dest:
+            dest = Path(self.staging_dir, self._ocio_config_name)
         dest = Path(dest).resolve().as_posix()
         self.load_config_from_file(Path(self.config_path).resolve().as_posix())
         self._get_absolute_search_paths()
@@ -386,29 +392,30 @@ class ColorProcessor:
         self.write_config(dest)
         self._dest_path = dest
         return dest
-    
+
     def get_oiiotool_cmd(self) -> list:
         cmd = [
             "--colorconfig",
             self._dest_path,
-            "--ociolook:from=\"{}\":to=\"{}\"".format(self.working_space,
-                                                      self.working_space),
-            self.context
+            '--ociolook:from="{}":to="{}"'.format(
+                self.working_space, self.working_space
+            ),
+            self.context,
         ]
         return cmd
-    
+
 
 @dataclass
 class RepoProcessor:
-    operators: list = field(default_factory = lambda: list([]))
+    operators: list = field(default_factory=lambda: list([]))
     source_width: int = None
     source_height: int = None
     dest_width: int = None
     dest_height: int = None
-    
+
     def __post_init__(self):
-         self._raw_matrix: list[list[float]] = list([list([])])
-         self._class_search_key = "class"
+        self._raw_matrix: list[list[float]] = list([list([])])
+        self._class_search_key = "class"
 
     def set_source_size(self, width: int, height: int) -> None:
         self.source_width = width
@@ -428,10 +435,9 @@ class RepoProcessor:
             else:
                 self.operators.append(a)
 
-    def get_matrix_chained(self,
-                           flip: bool = False,
-                           flop: bool = True,
-                           reverse_chain: bool = True) -> str:
+    def get_matrix_chained(
+        self, flip: bool = False, flop: bool = True, reverse_chain: bool = True
+    ) -> str:
         chain = []
         tlist = self.operators
         if reverse_chain:
@@ -441,10 +447,11 @@ class RepoProcessor:
         if flop:
             chain.append(utils.flop_matrix(self.source_height))
         for xform in tlist:
-            chain.append(utils.calculate_matrix(t = xform.translate,
-                                                r = xform.rotate,
-                                                s = xform.scale,
-                                                c = xform.center))
+            chain.append(
+                utils.calculate_matrix(
+                    t=xform.translate, r=xform.rotate, s=xform.scale, c=xform.center
+                )
+            )
         if flop:
             chain.append(utils.flop_matrix(self.source_height))
         if flip:
@@ -455,16 +462,13 @@ class RepoProcessor:
         self._raw_matrix = result
         return result
 
-    def get_cornerpin_data(self,
-                           matrix: list[list[float]]) -> list:
-        cp = utils.matrix_to_cornerpin(m = matrix,
-                                       w = self.source_width,
-                                       h = self.source_height,
-                                       origin_upperleft = False)
+    def get_cornerpin_data(self, matrix: list[list[float]]) -> list:
+        cp = utils.matrix_to_cornerpin(
+            m=matrix, w=self.source_width, h=self.source_height, origin_upperleft=False
+        )
         return cp
 
     def get_oiiotool_cmd(self) -> list:
-
         if not self.source_width:
             raise ValueError(f"Missing source width!")
         if not self.source_height:
@@ -473,14 +477,14 @@ class RepoProcessor:
             raise ValueError(f"Missing destination width!")
         if not self.dest_height:
             raise ValueError(f"Missing destination height!")
-        
+
         matrix = self.get_matrix_chained()
         matrix_tr = utils.transpose_matrix(matrix)
         warp_cmd = utils.matrix_to_csv(matrix_tr)
-        
-        src_aspect = self.source_width /self.source_height
+
+        src_aspect = self.source_width / self.source_height
         dest_aspect = self.dest_width / self.dest_height
-        
+
         fitted_width = self.source_width
         fitted_height = self.source_height
 
@@ -489,12 +493,14 @@ class RepoProcessor:
 
         if src_aspect > dest_aspect:
             fitted_height = int(self.source_width / dest_aspect)
-            y_offset = int((fitted_height-self.source_height)/2)
+            y_offset = int((fitted_height - self.source_height) / 2)
         elif src_aspect < dest_aspect:
             fitted_width = int(self.source_height * dest_aspect)
-            x_offset = int((fitted_width-self.source_width)/2)
-        
-        cropped_area = "{}x{}-{}-{}".format(fitted_width, fitted_height, x_offset, y_offset)
+            x_offset = int((fitted_width - self.source_width) / 2)
+
+        cropped_area = "{}x{}-{}-{}".format(
+            fitted_width, fitted_height, x_offset, y_offset
+        )
         dest_size = "{}x{}".format(self.dest_width, self.dest_height)
 
         cmd = [
@@ -505,7 +511,7 @@ class RepoProcessor:
             "--fullsize",
             cropped_area,
             "--resize",
-            dest_size
+            dest_size,
         ]
 
         return cmd
@@ -513,12 +519,12 @@ class RepoProcessor:
 
 @dataclass
 class SlateProcessor:
-    data: dict = field(default_factory = lambda: dict({}))
+    data: dict = field(default_factory=lambda: dict({}))
     width: int = 1920
     height: int = 1080
     staging_dir: str = None
     slate_template_path: str = None
-    source_files: list = field(default_factory = lambda: list([]))
+    source_files: list = field(default_factory=lambda: list([]))
     is_source_linear: bool = True
 
     def __post_init__(self):
@@ -546,20 +552,22 @@ class SlateProcessor:
         options.add_argument("--log-level=OFF")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-gpu')
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-gpu")
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
-        self._driver = webdriver.Chrome(options = options)
+        self._driver = webdriver.Chrome(options=options)
 
     def get_staging_dir(self) -> str:
         return self.staging_dir
-    
+
     def get_thumb_placeholder(self) -> str:
         self._driver.get(self._slate_staged_path)
-        thumb_placeholder = self._driver.find_elements(By.CLASS_NAME, self._thumb_class_name)[0]
+        thumb_placeholder = self._driver.find_elements(
+            By.CLASS_NAME, self._thumb_class_name
+        )[0]
         src = thumb_placeholder.get_attribute("src").replace("file:///", "")
         return src
-    
+
     def set_slate_base_name(self, name: str) -> None:
         self._slate_base_name = "{}.png".format(name)
 
@@ -574,10 +582,10 @@ class SlateProcessor:
 
     def set_template_path(self, path: str) -> None:
         self.slate_template_path = Path(path).resolve().as_posix()
-    
+
     def set_staging_dir(self, path: str) -> None:
         self.staging_dir = Path(path).resolve().as_posix()
-    
+
     def set_data(self, data: dict) -> None:
         self.data = data
 
@@ -587,17 +595,21 @@ class SlateProcessor:
 
     def set_thumb_class_name(self, name: str) -> None:
         self._thumb_class_name = name
-    
+
     def set_chart_class_name(self, name: str) -> None:
         self._chart_class_name = name
 
     def set_viewport_size(self, width: int, height: int) -> None:
-        window_size = self._driver.execute_script("""
+        window_size = self._driver.execute_script(
+            """
             return [window.outerWidth - window.innerWidth + arguments[0],
             window.outerHeight - window.innerHeight + arguments[1]];
-            """, width, height)
+            """,
+            width,
+            height,
+        )
         self._driver.set_window_size(*window_size)
-    
+
     def stage_slate(self) -> str:
         if not self.staging_dir:
             raise ValueError("Missing staging dir!")
@@ -606,11 +618,12 @@ class SlateProcessor:
         slate_path = Path(self.slate_template_path).resolve()
         slate_dir = slate_path.parent
         slate_name = slate_path.name
-        slate_staging_dir = Path(self.staging_dir, self._template_staging_dirname).resolve()
+        slate_staging_dir = Path(
+            self.staging_dir, self._template_staging_dirname
+        ).resolve()
         slate_staged_path = Path(slate_staging_dir, slate_name).resolve()
-        shutil.rmtree(slate_staging_dir.as_posix(), ignore_errors = True)
-        shutil.copytree(src = slate_dir.as_posix(),
-                        dst = slate_staging_dir.as_posix())
+        shutil.rmtree(slate_staging_dir.as_posix(), ignore_errors=True)
+        shutil.copytree(src=slate_dir.as_posix(), dst=slate_staging_dir.as_posix())
         self._slate_staged_path = slate_staged_path.as_posix()
         return self._slate_staged_path
 
@@ -618,25 +631,32 @@ class SlateProcessor:
         if not self.data:
             raise ValueError("Missing subst_data to format template!")
         with open(self._slate_staged_path, "r+") as f:
-            formatted_slate = f.read().format_map(
-                utils.format_dict(self.data))
+            formatted_slate = f.read().format_map(utils.format_dict(self.data))
             f.seek(0)
             f.write(formatted_slate)
             f.truncate()
         self._driver.get(self._slate_staged_path)
-        elements = self._driver.find_elements(By.XPATH,
-            "//*[contains(text(),'{}')]".format(utils.format_dict._placeholder))
+        elements = self._driver.find_elements(
+            By.XPATH,
+            "//*[contains(text(),'{}')]".format(utils.format_dict._placeholder),
+        )
         for el in elements:
-            self._driver.execute_script("""
+            self._driver.execute_script(
+                """
                 var element = arguments[0];
                 element.style.display = 'none';                  
-                """, el)
+                """,
+                el,
+            )
             if self._remove_missing_parents:
                 parent = el.find_element(By.XPATH, "..")
-                self._driver.execute_script("""
+                self._driver.execute_script(
+                    """
                     var element = arguments[0];
                     element.style.display = 'none';                  
-                    """, parent)
+                    """,
+                    parent,
+                )
         with open(self._slate_staged_path, "w") as f:
             f.seek(0)
             f.write(self._driver.page_source)
@@ -649,49 +669,55 @@ class SlateProcessor:
         for t in thumbs:
             src_path = t.get_attribute("src")
             if src_path:
-                aspect_ratio = self.width/self.height
-                thumb_height = int(t.size["width"]/aspect_ratio)
-                self._driver.execute_script("""
+                aspect_ratio = self.width / self.height
+                thumb_height = int(t.size["width"] / aspect_ratio)
+                self._driver.execute_script(
+                    """
                     var element = arguments[0];
                     element.style.height = '{}px'
-                    """.format(thumb_height), t)
+                    """.format(thumb_height),
+                    t,
+                )
                 self._thumbs.append(
                     utils.ImageInfo(
-                        filename = src_path.replace("file:///", ""),
-                        origin_x = t.location["x"],
-                        origin_y = t.location["y"],
-                        width = t.size["width"],
-                        height = thumb_height
+                        filename=src_path.replace("file:///", ""),
+                        origin_x=t.location["x"],
+                        origin_y=t.location["y"],
+                        width=t.size["width"],
+                        height=thumb_height,
                     )
                 )
         for t in thumbs:
-            self._driver.execute_script("""
+            self._driver.execute_script(
+                """
                 var element = arguments[0];
                 element.parentNode.removeChild(element);
-                """, t)
+                """,
+                t,
+            )
         charts = self._driver.find_elements(By.CLASS_NAME, self._chart_class_name)
         for c in charts:
             src_path = c.get_attribute("src")
             if src_path:
                 self._charts.append(
                     utils.ImageInfo(
-                        filename = src_path.replace("file:///", ""),
-                        origin_x = c.location["x"],
-                        origin_y = c.location["y"],
-                        width = c.size["width"],
-                        height = c.size["height"]
+                        filename=src_path.replace("file:///", ""),
+                        origin_x=c.location["x"],
+                        origin_y=c.location["y"],
+                        width=c.size["width"],
+                        height=c.size["height"],
                     )
                 )
         for c in charts:
-            self._driver.execute_script("""
+            self._driver.execute_script(
+                """
                 var element = arguments[0];
                 element.parentNode.removeChild(element);
-                """, c)
+                """,
+                c,
+            )
         template_staged_path = Path(self._slate_staged_path).resolve().parent
-        slate_base_path = Path(
-            template_staged_path,
-            self._slate_base_name
-        ).resolve()
+        slate_base_path = Path(template_staged_path, self._slate_base_name).resolve()
         self._driver.save_screenshot(slate_base_path.as_posix())
         self._driver.quit()
         self._slate_base_image_path = slate_base_path
@@ -700,7 +726,9 @@ class SlateProcessor:
     def set_thumbnail_sources(self) -> None:
         thumb_steps = int(len(self.source_files) / (len(self._thumbs) + 1))
         for i, t in enumerate(self._thumbs):
-            self._thumbs[i].filename = Path(self.source_files[thumb_steps * (i + 1)]).resolve().as_posix()
+            self._thumbs[i].filename = (
+                Path(self.source_files[thumb_steps * (i + 1)]).resolve().as_posix()
+            )
 
     def create_base_slate(self) -> None:
         self.stage_slate()
@@ -719,50 +747,74 @@ class SlateProcessor:
     def get_oiiotool_cmd(self) -> list:
         label = "base"
         cmd = [
-            "-i", Path(self._slate_base_image_path).resolve().as_posix(),
-            "--colorconvert", "sRGB", "linear",
-            "--ch", "R,G,B,A=1.0",
-            "--label", "slate",
-            "--create", "{}x{}".format(self.width, self.height), "4",
-            "--ch", "R,G,B,A=0.0",
-            "--label", label
+            "-i",
+            Path(self._slate_base_image_path).resolve().as_posix(),
+            "--colorconvert",
+            "sRGB",
+            "linear",
+            "--ch",
+            "R,G,B,A=1.0",
+            "--label",
+            "slate",
+            "--create",
+            "{}x{}".format(self.width, self.height),
+            "4",
+            "--ch",
+            "R,G,B,A=0.0",
+            "--label",
+            label,
         ]
         for i, t in enumerate(self._thumbs):
             if i > 0:
                 label = "imgs"
-            cmd.extend([
-                "-i", t.filename
-            ])
+            cmd.extend(["-i", t.filename])
             if not self.is_source_linear:
                 cmd.extend(["--colorconvert", "sRGB", "linear"])
-            cmd.extend([
-                "--ch", "R,G,B,A=1.0",
-                "--resample", "{}x{}+{}+{}".format(t.width,
-                                                   t.height,
-                                                   t.origin_x,
-                                                   t.origin_y),
-                label, "--over",
-                "--label", "imgs"
-            ])
+            cmd.extend(
+                [
+                    "--ch",
+                    "R,G,B,A=1.0",
+                    "--resample",
+                    "{}x{}+{}+{}".format(t.width, t.height, t.origin_x, t.origin_y),
+                    label,
+                    "--over",
+                    "--label",
+                    "imgs",
+                ]
+            )
         for i, c in enumerate(self._charts):
-            cmd.extend([
-                "-i", c.filename,
-                "--colorconvert", "sRGB", "linear",
-                "--ch", "R,G,B,A=1.0",
-                "--resample", "{}x{}+{}+{}".format(c.width,
-                                                   c.height,
-                                                   c.origin_x,
-                                                   c.origin_y),
-                "imgs", "--over",
-                "--label", "imgs"
-            ])
-        cmd.extend([
-            "slate", "--over",
-            "--label", "complete_slate",
-        ])
+            cmd.extend(
+                [
+                    "-i",
+                    c.filename,
+                    "--colorconvert",
+                    "sRGB",
+                    "linear",
+                    "--ch",
+                    "R,G,B,A=1.0",
+                    "--resample",
+                    "{}x{}+{}+{}".format(c.width, c.height, c.origin_x, c.origin_y),
+                    "imgs",
+                    "--over",
+                    "--label",
+                    "imgs",
+                ]
+            )
+        cmd.extend(
+            [
+                "slate",
+                "--over",
+                "--label",
+                "complete_slate",
+            ]
+        )
         if not self.is_source_linear:
-            cmd.extend([
-                "--colorconvert", "linear", "sRGB",
-            ])
+            cmd.extend(
+                [
+                    "--colorconvert",
+                    "linear",
+                    "sRGB",
+                ]
+            )
 
         return cmd
