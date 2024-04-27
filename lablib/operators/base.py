@@ -11,8 +11,15 @@ class BaseOperator:
     path: Path | None = None
     log = get_logger(__name__)
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
+        if len(args) > 0:
+            path = args[0]
+            if isinstance(path, Path):
+                self.path = path
+
+            if isinstance(path, str):
+                self.path = Path(path)
 
     def __getitem__(self, k: str) -> any:
         return getattr(self, k)

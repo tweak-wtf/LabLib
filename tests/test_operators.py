@@ -24,7 +24,7 @@ def test_ImageInfo(path: str):
     assert image_info.timecode == "02:10:04:17"
 
 
-@pytest.mark.skip(reason="Test is not implemented yet")
+# @pytest.mark.skip(reason="Test is not implemented yet")
 @pytest.mark.parametrize(
     "path",
     [
@@ -33,14 +33,14 @@ def test_ImageInfo(path: str):
     ],
 )
 def test_SequenceInfo(path: str):
-    image_info = SequenceInfo(path)
+    seq_info = SequenceInfo(path)
     path = Path(path)
-    log.info(f"{image_info = }")
-    assert image_info.par == 1.0
-    assert image_info.fps == 25.0
-    assert image_info.width == 4382
-    assert image_info.height == 2310
-    assert image_info.channels == 3
-    assert image_info.filepath == path
-    assert image_info.filename == path.name
-    assert image_info.timecode == "02:10:04:17"
+    log.info(f"{seq_info = }")
+    # assert image_info.par == 1.0
+    # assert image_info.fps == 25.0
+    # assert image_info.width == 4382
+    # assert image_info.height == 2310
+    # assert image_info.channels == 3
+    assert seq_info.path == path
+    # assert image_info.filename == path.name
+    # assert image_info.timecode == "02:10:04:17"
