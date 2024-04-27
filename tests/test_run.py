@@ -31,6 +31,7 @@ with open(DATA_PATH, "r") as f:
 
 # Setup SequenceInfo operator
 main_seq = operators.SequenceInfo().compute_longest(SOURCE_DIR)
+print(f"{main_seq = }")
 
 # Read image info from first image in sequence
 main_seq_info = utils.read_image_info(main_seq.frames[0])
@@ -65,7 +66,7 @@ rend = renderers.DefaultRenderer(
     staging_dir=STAGING_DIR,
     format=".png",
 )
-# rend.set_debug(True)
+rend.set_debug(True)
 rend.set_threads(8)
 computed_seq = rend.render()
 
