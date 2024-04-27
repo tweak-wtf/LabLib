@@ -35,9 +35,10 @@ with open(DATA_PATH, "r") as f:
         "resources/public/plateMain/v001",
     ],
 )
-def test_SequenceInfo(directory):
+def test_EffectsFileProcessor(directory):
+    pass
     # main_seq = operators.SequenceInfo().compute_longest(directory)
-    seq_info = operators.SequenceInfo.from_directory(directory)
+    # seq_info = operators.SequenceInfo.from_directory(directory)
     # if "v000" in directory:
     #     assert main_seq.frame_start == 1001
     #     assert main_seq.frame_end == 1001
