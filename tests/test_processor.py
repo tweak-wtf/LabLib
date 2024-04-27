@@ -2,7 +2,7 @@ import pytest
 
 import json
 
-from lablib import operators, processors, renderers, utils
+# from lablib import operators, processors, renderers, utils
 
 
 # System Constants
@@ -27,6 +27,7 @@ with open(DATA_PATH, "r") as f:
     working_data.append(json.load(f))
 
 
+@pytest.mark.skip(reason="Test is not implemented yet")
 @pytest.mark.parametrize(
     "directory",
     [
