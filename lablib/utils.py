@@ -27,15 +27,12 @@ class format_dict(dict):
 
 
 def __run_command(cmd: list[str]) -> list[str]:
-    log.debug(f"Running command with : {cmd}")
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     out, err = proc.communicate(timeout=2)
     if err:
         log.error(f"Error running command: {err}")
-    # subprocess.run(cmd, capture_output=True, text=True)
-    # result = out.strip().splitlines()
-    result = [line.decode("utf-8").strip() for line in out.splitlines()]
 
+    result = [line.decode("utf-8").strip() for line in out.splitlines()]
     return result
 
 

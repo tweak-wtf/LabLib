@@ -8,7 +8,8 @@ log = get_logger(__name__)
 
 @dataclass
 class BaseOperator:
-    path: Path | None = None
+    name: str
+    path: Path | None
     log = get_logger(__name__)
 
     def __init__(self, *args, **kwargs):
@@ -21,12 +22,16 @@ class BaseOperator:
             if isinstance(path, str):
                 self.path = Path(path)
 
+            if kwargs.get("name"):
+                self.name = kwargs.get("name")
+            else:
+                self.name = self.path.name
+
     def __getitem__(self, k: str) -> any:
         return getattr(self, k)
 
     def __setitem__(self, k: str, v: any) -> None:
         if hasattr(self, k):
-            log.debug(f"Setting {k} to {v}")
             setattr(self, k, v)
         else:
             log.error(f"Cannot set {k}={v}. Key {k} not found.", stack_info=True)
